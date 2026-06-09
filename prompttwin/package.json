@@ -1,0 +1,75 @@
+{
+  "name": "prompttwin",
+  "displayName": "PromptTwin",
+  "description": "Transform development requirements into Cursor-optimized meta prompts.",
+  "version": "0.0.1",
+  "publisher": "prompttwin",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:prompttwin.mainView",
+    "onCommand:prompttwin.focus",
+    "onCommand:prompttwin.setGeminiApiKey"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "prompttwin",
+          "title": "PromptTwin",
+          "icon": "resources/prompttwin-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "prompttwin": [
+        {
+          "type": "webview",
+          "id": "prompttwin.mainView",
+          "name": "Meta Prompt",
+          "icon": "resources/prompttwin-icon.svg"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "prompttwin.focus",
+        "title": "PromptTwin: Focus Panel"
+      },
+      {
+        "command": "prompttwin.setGeminiApiKey",
+        "title": "PromptTwin: Set Gemini API Key"
+      },
+      {
+        "command": "prompttwin.helloWorld",
+        "title": "Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "@google/genai": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.120.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.56.1",
+    "eslint": "^9.39.3",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
