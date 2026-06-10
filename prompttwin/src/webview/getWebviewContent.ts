@@ -44,10 +44,13 @@ export function getWebviewContent(
 			></textarea>
 		</section>
 
-		<button id="generateBtn" class="generate-btn" type="button">
-			<span class="generate-btn__spinner" aria-hidden="true"></span>
-			<span class="generate-btn__label">메타 프롬프트 생성</span>
-		</button>
+		<div class="button-row">
+			<button id="generateBtn" class="btn btn--primary generate-btn" type="button">
+				<span class="generate-btn__spinner" aria-hidden="true"></span>
+				<span class="generate-btn__label">메타 프롬프트 생성</span>
+			</button>
+			<button id="resetBtn" class="btn btn--secondary" type="button">리셋</button>
+		</div>
 
 		<section class="section">
 			<label class="section__label" for="result">생성 결과</label>
@@ -57,7 +60,11 @@ export function getWebviewContent(
 				role="status"
 				aria-live="polite"
 			>아직 생성된 결과가 없습니다. 요구사항을 입력한 뒤 버튼을 눌러 주세요.</div>
-			<button id="copy-btn" class="copy-btn" type="button" disabled>📋 결과 복사하기</button>
+			<div class="button-row button-row--wrap">
+				<button id="copy-btn" class="btn btn--secondary" type="button" disabled>📋 결과 복사하기</button>
+				<button id="preview-btn" class="btn btn--secondary" type="button" disabled>결과 미리 보기</button>
+				<button id="close-preview-btn" class="btn btn--secondary" type="button" disabled>미리보기 닫기</button>
+			</div>
 		</section>
 
 		<p id="statusBar" class="status-bar" aria-live="polite"></p>
@@ -68,23 +75,36 @@ export function getWebviewContent(
 
 		const requirementsEl = document.getElementById('requirements');
 		const generateBtn = document.getElementById('generateBtn');
+		const resetBtn = document.getElementById('resetBtn');
 		const resultEl = document.getElementById('result');
 		const copyBtn = document.getElementById('copy-btn');
+		const previewBtn = document.getElementById('preview-btn');
+		const closePreviewBtn = document.getElementById('close-preview-btn');
 		const statusBarEl = document.getElementById('statusBar');
 
 		let copyableText = '';
+		let isPreviewOpen = false;
 
 		function setLoading(isLoading) {
 			generateBtn.disabled = isLoading;
 			generateBtn.classList.toggle('is-loading', isLoading);
 			requirementsEl.disabled = isLoading;
+			resetBtn.disabled = isLoading;
 			if (isLoading) {
-				copyBtn.disabled = true;
+				updateResultActions();
 			}
 		}
 
-		function updateCopyButton() {
-			copyBtn.disabled = !copyableText.trim();
+		function updateResultActions() {
+			const hasCopyable = Boolean(copyableText.trim());
+			copyBtn.disabled = !hasCopyable;
+			previewBtn.disabled = !hasCopyable;
+			closePreviewBtn.disabled = !isPreviewOpen;
+		}
+
+		function setPreviewOpen(open) {
+			isPreviewOpen = open;
+			updateResultActions();
 		}
 
 		function setResult(text, { isError = false, copyable = false } = {}) {
@@ -99,9 +119,10 @@ export function getWebviewContent(
 				copyableText = text.trim();
 			} else if (isError || !hasContent) {
 				copyableText = '';
+				setPreviewOpen(false);
 			}
 
-			updateCopyButton();
+			updateResultActions();
 		}
 
 		function setStatus(text, { isError = false, isWarning = false } = {}) {
@@ -124,12 +145,18 @@ export function getWebviewContent(
 			resultEl.classList.remove('is-empty');
 
 			copyableText = '';
-			updateCopyButton();
+			setPreviewOpen(false);
 
 			vscode.postMessage({
 				type: 'generateMetaPrompt',
 				requirements,
 			});
+		});
+
+		resetBtn.addEventListener('click', () => {
+			requirementsEl.value = '';
+			requirementsEl.focus();
+			setStatus('');
 		});
 
 		copyBtn.addEventListener('click', () => {
@@ -145,6 +172,25 @@ export function getWebviewContent(
 			});
 		});
 
+		previewBtn.addEventListener('click', () => {
+			const text = copyableText.trim();
+			if (!text) {
+				setStatus('미리 볼 결과가 없습니다.', { isError: true });
+				return;
+			}
+
+			vscode.postMessage({
+				command: 'previewText',
+				text,
+			});
+		});
+
+		closePreviewBtn.addEventListener('click', () => {
+			vscode.postMessage({
+				command: 'closePreview',
+			});
+		});
+
 		window.addEventListener('message', (event) => {
 			const message = event.data;
 			if (!message || typeof message !== 'object') {
@@ -152,6 +198,9 @@ export function getWebviewContent(
 			}
 
 			switch (message.type) {
+				case 'previewState':
+					setPreviewOpen(Boolean(message.isOpen));
+					break;
 				case 'metaPromptResult':
 					setLoading(false);
 					setResult(message.result ?? '', { isError: false, copyable: true });

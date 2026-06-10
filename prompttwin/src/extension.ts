@@ -6,6 +6,12 @@ import { PROMPTTWIN_VIEW_CONTAINER_ID, PROMPTTWIN_VIEW_ID } from './constants';
 import { GEMINI_API_KEY_SECRET } from './gemini/constants';
 import { formatGeminiError } from './gemini/formatGeminiError';
 import { generateMetaPrompt } from './gemini/generateMetaPrompt';
+import {
+	closePreviewDocument,
+	isPreviewOpen,
+	openPreviewDocument,
+	registerPreviewCleanup,
+} from './preview/previewManager';
 import { getWebviewContent } from './webview/getWebviewContent';
 
 class PromptTwinViewProvider implements vscode.WebviewViewProvider {
@@ -43,6 +49,32 @@ class PromptTwinViewProvider implements vscode.WebviewViewProvider {
 
 				await vscode.env.clipboard.writeText(text);
 				void vscode.window.showInformationMessage('📋 메타 프롬프트가 클립보드에 복사되었습니다!');
+				return;
+			}
+
+			if (message.command === 'previewText') {
+				const text = message.text?.trim();
+				if (!text) {
+					void vscode.window.showWarningMessage('미리 볼 결과가 없습니다.');
+					webview.postMessage({ type: 'previewState', isOpen: false });
+					return;
+				}
+
+				await openPreviewDocument(text);
+				void vscode.window.showInformationMessage('중앙 에디터에서 결과를 미리 볼 수 있습니다.');
+				webview.postMessage({ type: 'previewState', isOpen: true });
+				return;
+			}
+
+			if (message.command === 'closePreview') {
+				const closed = await closePreviewDocument();
+				webview.postMessage({ type: 'previewState', isOpen: isPreviewOpen() });
+
+				if (closed) {
+					void vscode.window.showInformationMessage('미리보기 창을 닫았습니다.');
+				} else {
+					void vscode.window.showInformationMessage('열린 미리보기 창이 없습니다.');
+				}
 				return;
 			}
 
@@ -116,6 +148,8 @@ async function focusPromptTwinPanel(): Promise<void> {
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('PromptTwin extension is now active.');
+
+	registerPreviewCleanup(context);
 
 	const provider = new PromptTwinViewProvider(context.extensionUri, context.secrets);
 

@@ -76,32 +76,65 @@ body {
 	box-shadow: 0 0 0 1px var(--vscode-focusBorder);
 }
 
-.generate-btn {
-	align-self: flex-start;
+.button-row {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+}
+
+.button-row--wrap {
+	flex-wrap: wrap;
+}
+
+.btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 8px;
-	min-width: 140px;
-	padding: 8px 16px;
-	border: none;
+	gap: 6px;
+	min-height: 32px;
+	padding: 6px 14px;
+	border: 1px solid transparent;
 	border-radius: 4px;
-	background-color: var(--vscode-button-background);
-	color: var(--vscode-button-foreground);
 	font-family: var(--vscode-font-family);
 	font-size: var(--vscode-font-size);
-	font-weight: 600;
+	font-weight: 500;
+	line-height: 1.2;
+	white-space: nowrap;
 	cursor: pointer;
-	transition: opacity 0.15s ease;
+	transition: background-color 0.15s ease, opacity 0.15s ease;
 }
 
-.generate-btn:hover:not(:disabled) {
+.btn--primary {
+	border: none;
+	background-color: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	font-weight: 600;
+}
+
+.btn--primary:hover:not(:disabled) {
 	background-color: var(--vscode-button-hoverBackground);
 }
 
-.generate-btn:disabled {
-	opacity: 0.6;
+.btn--secondary {
+	border-color: var(--vscode-button-border, transparent);
+	background-color: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+	color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+}
+
+.btn--secondary:hover:not(:disabled) {
+	background-color: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
+}
+
+.btn:disabled {
+	opacity: 0.45;
 	cursor: not-allowed;
+}
+
+.generate-btn {
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .generate-btn__spinner {
@@ -154,33 +187,6 @@ body {
 	font-style: normal;
 }
 
-.copy-btn {
-	align-self: flex-start;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-	padding: 6px 14px;
-	border: 1px solid var(--vscode-button-border, transparent);
-	border-radius: 4px;
-	background-color: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
-	color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
-	font-family: var(--vscode-font-family);
-	font-size: var(--vscode-font-size);
-	font-weight: 500;
-	cursor: pointer;
-	transition: background-color 0.15s ease, opacity 0.15s ease;
-}
-
-.copy-btn:hover:not(:disabled) {
-	background-color: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
-}
-
-.copy-btn:disabled {
-	opacity: 0.45;
-	cursor: not-allowed;
-}
-
 .status-bar {
 	min-height: 1.2em;
 	font-size: 0.8em;
@@ -193,4 +199,11 @@ body {
 
 .status-bar.is-warning {
 	color: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+@media (max-width: 320px) {
+	.button-row--wrap .btn {
+		flex: 1 1 calc(50% - 4px);
+		min-width: calc(50% - 4px);
+	}
 }
